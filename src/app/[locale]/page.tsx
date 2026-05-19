@@ -11,8 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Page(_: PageProps<"/[locale]">) {
+export default async function Page() {
   const t = await getTranslations();
-
-  return <Title>"test"</Title>;
+  return <Title>{t("page.listings.title")}</Title>;
 }
