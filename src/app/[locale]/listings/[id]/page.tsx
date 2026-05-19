@@ -1,0 +1,87 @@
+"use client";
+
+import Link from "next/link";
+import { useParams} from "next/navigation";
+import{
+  Badge,
+  Button,
+  Card,
+  Container,
+  Divider,
+  Group,
+  Select,
+  Stack,
+  Text,
+  Title
+} from "@mantine/core";
+import { statuses, type ListingStatus} from "@/components/data/listings";
+import { useListings } from "@/components/listings/useListings";
+
+const statusLabels: Record<ListingStatus, string> = {
+  available: "Dostupné",
+  reserved: "Rezervováno",
+  sold: "Prodáno/předáno",
+};
+
+const statusColors: Record<ListingStatus, string> = {
+  available: "green",
+  reserved: "yellow",
+  sold: "gray",
+};
+
+export default function ListingDetailPage() {
+  const params = useParams<{ locale?: string; id?: string }>();
+
+  const locale =
+    Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
+  const id = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
+
+  const { listings, updateListingStatus, ready } = useListings();
+
+  const listing = listings.find((item) => item.id === id);
+
+  if (!ready) {
+    return (
+      <Container size="sm" py="xl">
+        <Text>Načítám…</Text>
+      </Container>
+    );
+  }
+
+  if (!listing) {
+    return (
+      <Container size="sm"py="xl">
+        <Stack gap="md">
+          <Title order={1}>Inzerát nenalezen</Title>
+          <Button component={Link} href={`/${locale}`}>
+            Zpět na přehled
+          </Button>
+        </Stack>
+      </Container>
+    );
+  }
+
+  return(
+    <Container size="sm" py="xl">
+      <Stack gap="lg">
+        <Group justify="space-between" align="center">
+          <Button component={Link} href={`/${locale}`} variant="subtle">
+            ← Zpět
+          </Button>
+
+          <Select
+            label="stav"
+            data= {statuses}
+            value = {listing.status}
+            onChange= {(value) => {
+              if(!value) return;
+              updateListingStatus(listing.id, value as ListingStatus);
+            }}
+            w={220}
+          />
+
+        </Group>
+      </Stack>
+    </Container>
+  )
+}
