@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams} from "next/navigation";
-import{
+import { useParams } from "next/navigation";
+import {
   Badge,
   Button,
   Card,
@@ -14,7 +14,7 @@ import{
   Text,
   Title
 } from "@mantine/core";
-import { statuses, type ListingStatus} from "@/components/data/listings";
+import { statuses, type ListingStatus } from "@/components/data/listings";
 import { useListings } from "@/components/listings/useListings";
 
 const statusLabels: Record<ListingStatus, string> = {
@@ -50,7 +50,7 @@ export default function ListingDetailPage() {
 
   if (!listing) {
     return (
-      <Container size="sm"py="xl">
+      <Container size="sm" py="xl">
         <Stack gap="md">
           <Title order={1}>Inzerát nenalezen</Title>
           <Button component={Link} href={`/${locale}`}>
@@ -61,7 +61,7 @@ export default function ListingDetailPage() {
     );
   }
 
-  return(
+  return (
     <Container size="sm" py="xl">
       <Stack gap="lg">
         <Group justify="space-between" align="center">
@@ -71,17 +71,41 @@ export default function ListingDetailPage() {
 
           <Select
             label="stav"
-            data= {statuses}
-            value = {listing.status}
-            onChange= {(value) => {
-              if(!value) return;
+            data={statuses}
+            value={listing.status}
+            onChange={(value) => {
+              if (!value) return;
               updateListingStatus(listing.id, value as ListingStatus);
             }}
             w={220}
           />
-
         </Group>
+
+        <Card withBorder radius="lg" p="xl">
+          <Stack gap="md">
+            <Title order={1}>{listing.title}</Title>
+
+            <Group gap="xs">
+              <Badge variant="light">{listing.category}</Badge>
+              <Badge color={statusColors[listing.status]}>
+                {statusLabels[listing.status]}
+              </Badge>
+            </Group>
+
+            <Text fw={700} size="xl" c="orange">
+              {listing.isFree
+                ? "ZDARMA"
+                : `${listing.price?.toLocaleString("cs - CZ")} Kč`}
+            </Text>
+
+            <Divider />
+
+            <Text>{listing.description}</Text>
+
+            <Text c="dimmed">Kontakt: {listing.contact}</Text>
+          </Stack>
+        </Card>
       </Stack>
     </Container>
-  )
+  );
 }
