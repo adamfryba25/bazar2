@@ -77,7 +77,14 @@ export default function Page() {
         ) : (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
             {filteredListings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} locale={locale} />
+              <ListingCard
+                key={listing.id}
+                listing={{
+                  ...listing,
+                  price: listing.price ? Number(listing.price) : null,
+                }}
+                locale={locale}
+              />
             ))}
           </SimpleGrid>
         )}

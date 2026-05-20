@@ -1,57 +1,70 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  initialListings,
-  type Listing,
-  type ListingStatus,
-} from "@/components/data/listings";
+import type { ListingCategory, ListingStatus } from "@/components/data/listings";
 
-const STORAGE_KEY = "blogic-bazar-listings";
+export type Listing = {
+  id: string;
+  title: string;
+  description: string;
+  price: string | null;
+  isFree: boolean;
+  category: ListingCategory;
+  status: ListingStatus;
+  contact: string;
+  imageUrl: string | null;
+  createdAt: string;
+};
 
 export function useListings() {
-  const [listings, setListings] = useState<Listing[]>(initialListings);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-
-    if(raw){
-      try {
-        setListings(JSON.parse(raw) as Listing[]);
-      }
-      catch{
-        setListings(initialListings);
-      }
-    }
-
-    setReady(true);
+    fetch("/api/listings")
+      .then((res) => res.json())
+      .then((data) => {
+        setListings(data);
+        setReady(true);
+      })
+      .catch(() => setReady(true));
   }, []);
 
-  useEffect(() => {
-    if(!ready) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(listings));
-  }, [listings, ready]);
-
-  const addListing = (listing: Omit<Listing, "id">) => {
-    const newListing: Listing = {
-      ...listing,
-      id: crypto.randomUUID(),
-    };
+  const addListing = async (listing: {
+    title: string;
+    description: string;
+    price: number | null;
+    isFree: boolean;
+    category: ListingCategory;
+    status: ListingStatus;
+    contact: string;
+  }) => {
+    const res = await fetch("/api/listings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listing),
+    });
+    const newListing = await res.json();
     setListings((prev) => [newListing, ...prev]);
   };
 
-  const updateListingStatus = (id: string, status: ListingStatus) => {
+  const updateListingStatus = async (id: string, status: ListingStatus) => {
+    await fetch (`/api/listings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
     setListings((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status } : item))
+      prev.map((item) => (item.id === id ? { ...item, status}: item))
     );
   };
 
-  const deleteListing = (id: string) => {
+  const deleteListing = async (id:string) => {
+    await fetch(`/api/listings/${id}`, { method: "DELETE" });
     setListings((prev) => prev.filter((item) => item.id !== id));
   };
 
-  return{
+  return {
     listings,
     addListing,
     updateListingStatus,
