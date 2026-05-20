@@ -47,10 +47,15 @@ export function useListings() {
     );
   };
 
+  const deleteListing = (id: string) => {
+    setListings((prev) => prev.filter((item) => item.id !== id));
+  };
+
   return{
     listings,
     addListing,
     updateListingStatus,
+    deleteListing,
     ready,
   };
 }

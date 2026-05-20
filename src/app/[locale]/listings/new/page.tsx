@@ -59,5 +59,93 @@ export default function NewListingPage() {
       form.setFieldError("price", "Cena je povinná, pokud nabídka není zdarma");
       return;
     }
-  }
+
+    addListing({
+      title: values.title,
+      description: values.description,
+      price: values.isFree ? null : values.price ?? null,
+      isFree: values.isFree,
+      category: values.category as ListingCategory,
+      status: "available",
+      contact: values.contact,
+    });
+
+    router.push(`/${locale}`);
+  };
+
+  return (
+    <Container size="sm" py="xl">
+      <Stack gap="lg">
+        <Group justify="space-between">
+          <Title order={1}>Nový inzerát</Title>
+
+          <Button component={Link} href={`/${locale}`} variant="subtle">
+            Zpět
+          </Button>
+        </Group>
+
+        <Card withBorder radius="lg" p="xl">
+          <form onSubmit={form.onSubmit(handleSubmit)}>
+            <Stack gap="md">
+              <TextInput
+                label="Název"
+                placeholder="Např. Psací stůl"
+                {...form.getInputProps("title")}
+              />
+
+              <Textarea
+                label="Popis"
+                minRows={5}
+                placeholder="Popiš stav, velikost a další detaily"
+                {...form.getInputProps("description")}
+              />
+
+              <Checkbox
+                label="Zdarma"
+                checked={form.values.isFree}
+                onChange={(event) => {
+                  const checked = event.currentTarget.checked;
+                  form.setFieldValue("isFree", checked);
+
+                  if (checked) {
+                    form.setFieldValue("price", undefined);
+                    form.clearFieldError("price");
+                  }
+                }}
+              />
+
+              <NumberInput
+                label="Cena"
+                placeholder="Např. 500"
+                disabled={form.values.isFree}
+                value={form.values.price}
+                onChange={(value) =>
+                  form.setFieldValue(
+                    "price",
+                    typeof value === "number" ? value : undefined
+                  )
+                }
+                error={form.errors.price}
+              />
+
+              <Select
+                label="Kategorie"
+                data={categories}
+                placeholder="Vyber kategorii"
+                {...form.getInputProps("category")}
+              />
+
+              <TextInput
+                label="Kontakt"
+                placeholder="Např. jana@blogic.cz"
+                {...form.getInputProps("contact")}
+              />
+
+              <Button type="submit">Uložit inzerát</Button>
+            </Stack>
+          </form>
+        </Card>
+      </Stack>
+    </Container>
+  )
 }

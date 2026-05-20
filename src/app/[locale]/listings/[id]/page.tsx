@@ -95,7 +95,7 @@ export default function ListingDetailPage() {
             <Text fw={700} size="xl" c="orange">
               {listing.isFree
                 ? "ZDARMA"
-                : `${listing.price?.toLocaleString("cs - CZ")} Kč`}
+                : `${listing.price?.toLocaleString("cz-CZ")} Kč`}
             </Text>
 
             <Divider />
