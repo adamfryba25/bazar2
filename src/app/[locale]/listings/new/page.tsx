@@ -63,7 +63,7 @@ export default function NewListingPage() {
     addListing({
       title: values.title,
       description: values.description,
-      price: values.isFree ? null : values.price ?? null,
+      price: values.isFree ? null : values.price ? Number(values.price) : null,
       isFree: values.isFree,
       category: values.category as ListingCategory,
       status: "available",
