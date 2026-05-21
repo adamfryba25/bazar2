@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { notFound } from "next/navigation";
@@ -16,18 +17,19 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   return (
     <html lang={locale} {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript />
       </head>
       <body>
-        <NextIntlClientProvider>
-          <MantineProvider>
-            <ModalsProvider>
-              <Providers>
-                <PageLayout>{children}</PageLayout>
-              </Providers>
-            </ModalsProvider>
-          </MantineProvider>
-        </NextIntlClientProvider>
+        <ClerkProvider afterSignOutUrl="/cs">
+          <NextIntlClientProvider>
+            <MantineProvider>
+              <ModalsProvider>
+                <Providers>
+                  <PageLayout>{children}</PageLayout>
+                </Providers>
+              </ModalsProvider>
+            </MantineProvider>
+          </NextIntlClientProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

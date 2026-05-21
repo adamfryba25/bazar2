@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 import {
   Button, Center, Container, Group,
   Loader, Select, SimpleGrid, Stack, Text, TextInput
 } from "@mantine/core";
 
-import { ListingCard } from "@/components/listings/ListingCard";
+import { ListingCard, } from "@/components/listings/ListingCard";
 import { useListings } from "@/components/listings/useListings";
 import { categories } from "@/components/data/listings";
-import { useAdmin } from "@/components/auth/useAdmin";
 import { AdminLoginModal } from "@/components/auth/AdminLoginModal";
 
 export default function Page() {
@@ -20,7 +20,6 @@ export default function Page() {
   const locale = Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
 
   const { listings, ready } = useListings();
-  const { isAdmin, logout } = useAdmin();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -34,37 +33,35 @@ export default function Page() {
     <Container size="xl" py="xl">
       <Stack gap="lg">
         <Group justify="space-between" align="flex-start">
-          <div>
-            <Text c="dimmed">
-              Vyber si inzerát, otevři detail nebo přidej nový
-            </Text>
-          </div>
+          <Text c="dimmed">
+            Vyber si inzerát, otevři detail nebo přidej nový
+          </Text>
+
           <Group>
-            {isAdmin ? (
-              <>
-                <Button component={Link} href={`/${locale}/listings/new`}>
-                  Nový inzerát
-                </Button>
-                <Button variant="subtle" color="gray" onClick={logout}>
-                  Odhlásit
-                </Button>
-              </>
-            ) : (
-              <Button variant="subtle" onClick={() => setLoginOpen(true)}>
-                Admin
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="subtle">Přihlásit se</Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button>Registrovat se</Button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <Button component={Link} href={`/${locale}/listings/new`}>
+                Nový inzerát
               </Button>
-            )}
+              <UserButton />
+            </SignedIn>
           </Group>
         </Group>
 
         <Group align="flex-end">
           <TextInput
-            placeholder="Hledat inzeráty..."
+            placeholder="Hledat inzeráty"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             w={300}
           />
-
           <Select
             placeholder="Všechny kategorie"
             data={[{ value: "", label: "Všechny kategorie" }, ...categories]}
