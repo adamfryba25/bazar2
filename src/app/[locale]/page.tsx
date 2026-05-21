@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 
 import {
   Button, Center, Container, Group,
-  Loader, Select, SimpleGrid, Stack, Text, Title
+  Loader, Select, SimpleGrid, Stack, Text, TextInput
 } from "@mantine/core";
 
 import { ListingCard } from "@/components/listings/ListingCard";
@@ -23,11 +23,12 @@ export default function Page() {
   const { isAdmin, logout } = useAdmin();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
 
-  const filteredListings = selectedCategory
-    ? listings.filter((l) => l.category === selectedCategory)
-    : listings;
+  const filteredListings = listings
+    .filter((l) => !selectedCategory || l.category === selectedCategory)
+    .filter((l) => l.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <Container size="xl" py="xl">
@@ -35,10 +36,9 @@ export default function Page() {
         <Group justify="space-between" align="flex-start">
           <div>
             <Text c="dimmed">
-              Vyber si inzerát, otevři detail nebo přidej nový.
+              Vyber si inzerát, otevři detail nebo přidej nový
             </Text>
           </div>
-
           <Group>
             {isAdmin ? (
               <>
@@ -57,14 +57,23 @@ export default function Page() {
           </Group>
         </Group>
 
-        <Select
-          placeholder="Filtrovat podle kategorie"
-          data={categories}
-          value={selectedCategory}
-          onChange={setSelectedCategory}
-          clearable
-          w={260}
-        />
+        <Group align="flex-end">
+          <TextInput
+            placeholder="Hledat inzeráty..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            w={300}
+          />
+
+          <Select
+            placeholder="Filtrovat podle kategorie"
+            data={categories}
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            clearable
+            w={260}
+          />
+        </Group>
 
         {!ready ? (
           <Center py="xl">
@@ -72,7 +81,11 @@ export default function Page() {
           </Center>
         ) : filteredListings.length === 0 ? (
           <Center py="xl">
-            <Text c="dimmed">Žádné inzeráty v této kategorii.</Text>
+            <Text c="dimmed">
+              {search
+                ? `Žádné inzeráty odpovídající "${search}".`
+                : "Žádné inzeráty v této kategorii."}
+            </Text>
           </Center>
         ) : (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
