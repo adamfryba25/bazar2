@@ -1,26 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+
 import {
-  Badge,
-  Button,
-  Card,
-  Container,
-  Divider,
-  Group,
-  Select,
-  Stack,
-  Text,
-  Title
+  Badge, Button, Card, Container, Divider,
+  Group, Select, Stack, Text, Title
 } from "@mantine/core";
-import { statuses, type ListingStatus } from "@/components/data/listings";
+
+import { statuses, type ListingStatus } from "@/components/data/listings"
 import { useListings } from "@/components/listings/useListings";
+import { useAdmin } from "@/components/auth/useAdmin";
 
 const statusLabels: Record<ListingStatus, string> = {
   available: "Dostupné",
   reserved: "Rezervováno",
-  sold: "Prodáno/předáno",
+  sold: "Prodáno/předáno ",
 };
 
 const statusColors: Record<ListingStatus, string> = {
@@ -30,36 +25,33 @@ const statusColors: Record<ListingStatus, string> = {
 };
 
 export default function ListingDetailPage() {
-  const params = useParams<{ locale?: string; id?: string }>();
+  const params = useParams<{ locale?: string, id?: string }>();
+  const router = useRouter();
 
-  const locale =
-    Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
+  const locale = Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
   const id = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
 
-  const { listings, updateListingStatus, ready } = useListings();
+  const { listings, updateListingStatus, deleteListing, ready } = useListings();
+  const { isAdmin } = useAdmin();
 
   const listing = listings.find((item) => item.id === id);
 
-  if (!ready) {
-    return (
-      <Container size="sm" py="xl">
-        <Text>Načítám…</Text>
-      </Container>
-    );
-  }
+  const handleDelete = () => {
+    if (!confirm("Opravdu chceš smazat tento inzerát?")) return;
+    deleteListing(id);
+    router.push(`/${locale}`);
+  };
 
-  if (!listing) {
-    return (
-      <Container size="sm" py="xl">
-        <Stack gap="md">
-          <Title order={1}>Inzerát nenalezen</Title>
-          <Button component={Link} href={`/${locale}`}>
-            Zpět na přehled
-          </Button>
-        </Stack>
-      </Container>
-    );
-  }
+  if (!ready) return <Container py="xl"><Text>Načítám...</Text></Container>;
+
+  if (!listing) return (
+    <Container size="sm" py="xl">
+      <Stack gap="md">
+        <Title order={1}>Inzerát nenalezen</Title>
+        <Button component={Link} href={`/${locale}`}>Zpět na přehled</Button>
+      </Stack>
+    </Container>
+  );
 
   return (
     <Container size="sm" py="xl">
@@ -68,40 +60,41 @@ export default function ListingDetailPage() {
           <Button component={Link} href={`/${locale}`} variant="subtle">
             ← Zpět
           </Button>
-
-          <Select
-            label="stav"
-            data={statuses}
-            value={listing.status}
-            onChange={(value) => {
-              if (!value) return;
-              updateListingStatus(listing.id, value as ListingStatus);
-            }}
-            w={220}
-          />
+          <Group>
+            {isAdmin && (
+              <>
+                <Select
+                  label="Stav"
+                  data={statuses}
+                  value={listing.status}
+                  onChange={(value) => {
+                    if (!value) return;
+                    updateListingStatus(listing.id, value as ListingStatus);
+                  }}
+                  w={220}
+                />
+                <Button color="red" variant="light" onClick={handleDelete} mt={24}>
+                  Smazat
+                </Button>
+              </>
+            )}
+          </Group>
         </Group>
 
         <Card withBorder radius="lg" p="xl">
           <Stack gap="md">
             <Title order={1}>{listing.title}</Title>
-
             <Group gap="xs">
               <Badge variant="light">{listing.category}</Badge>
               <Badge color={statusColors[listing.status]}>
                 {statusLabels[listing.status]}
               </Badge>
             </Group>
-
             <Text fw={700} size="xl" c="orange">
-              {listing.isFree
-                ? "ZDARMA"
-                : `${listing.price?.toLocaleString("cz-CZ")} Kč`}
+              {listing.isFree ? "Zdarma" : `${listing.price?.toLocaleString("cs-CZ")} Kč`}
             </Text>
-
             <Divider />
-
             <Text>{listing.description}</Text>
-
             <Text c="dimmed">Kontakt: {listing.contact}</Text>
           </Stack>
         </Card>
