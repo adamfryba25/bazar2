@@ -41,11 +41,10 @@ export default function Page() {
         </Group>
 
         <Select
-          placeholder="Filtrovat podle kategorie"
-          data={categories}
+          placeholder="Všechny kategorie"
+          data={[{ value: "", label: "Všechny kategorie" }, ...categories]}
           value={selectedCategory}
-          onChange={setSelectedCategory}
-          clearable
+          onChange={(val) => setSelectedCategory(val || null)}
           w={260}
         />
 
