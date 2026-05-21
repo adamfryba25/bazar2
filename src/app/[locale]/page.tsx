@@ -57,23 +57,13 @@ export default function Page() {
           </Group>
         </Group>
 
-        <Group align="flex-end">
-          <TextInput
-            placeholder="Hledat inzeráty..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            w={300}
-          />
-
-          <Select
-            placeholder="Filtrovat podle kategorie"
-            data={categories}
-            value={selectedCategory}
-            onChange={setSelectedCategory}
-            clearable
-            w={260}
-          />
-        </Group>
+        <Select
+          placeholder="Všechny kategorie"
+          data={[{ value: "", label: "Všechny kategorie" }, ...categories]}
+          value={selectedCategory}
+          onChange={(val) => setSelectedCategory(val || null)}
+          w={260}
+        />
 
         {!ready ? (
           <Center py="xl">
