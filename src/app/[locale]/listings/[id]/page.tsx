@@ -10,7 +10,7 @@ import {
 
 import { statuses, type ListingStatus } from "@/components/data/listings"
 import { useListings } from "@/components/listings/useListings";
-import { useAdmin } from "@/components/auth/useAdmin";
+import { useUser } from "@clerk/nextjs";
 
 const statusLabels: Record<ListingStatus, string> = {
   available: "Dostupné",
@@ -32,7 +32,7 @@ export default function ListingDetailPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
 
   const { listings, updateListingStatus, deleteListing, ready } = useListings();
-  const { isAdmin } = useAdmin();
+  const { isSignedIn } = useUser();
 
   const listing = listings.find((item) => item.id === id);
 
@@ -61,7 +61,7 @@ export default function ListingDetailPage() {
             ← Zpět
           </Button>
           <Group>
-            {isAdmin && (
+            {isSignedIn && (
               <>
                 <Select
                   label="Stav"
@@ -91,7 +91,7 @@ export default function ListingDetailPage() {
               </Badge>
             </Group>
             <Text fw={700} size="xl" c="orange">
-              {listing.isFree ? "Zdarma" : `${listing.price?.toLocaleString("cs-CZ")} Kč`}
+              {listing.isFree ? "Zdarma" : `${Number(listing.price).toLocaleString("cs-CZ")} Kč`}
             </Text>
             <Divider />
             <Text>{listing.description}</Text>

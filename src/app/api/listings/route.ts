@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const all = await db.select().from(listings).orderBy(desc (listings.createdAt));
+    const all = await db.select().from(listings).orderBy(desc(listings.createdAt));
     return NextResponse.json(all);
   } catch (error) {
     return NextResponse.json({ error: "Chyba při načítání" }, { status: 500 });
@@ -15,7 +15,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const newListing = await db.insert(listings).values ({
+    const newListing = await db.insert(listings).values({
       title: body.title,
       description: body.description,
       price: body.price?.toString() ?? null,
