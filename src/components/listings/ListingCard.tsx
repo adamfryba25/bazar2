@@ -1,13 +1,13 @@
-"Use client";
+"use client";
 
 import Link from "next/link";
-import { Badge, Button, Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Badge, Button, Card, Group, Image, Stack, Text, Title } from "@mantine/core";
 import type { Listing } from "@/components/data/listings";
 
 const statusLabels: Record<Listing["status"], string> = {
   available: "Dostupné",
-  reserved: "Rezervovano",
-  sold: "Prodáno / předáno",
+  reserved: "Rezervováno",
+  sold: "Prodáno/předáno",
 };
 
 const statusColors: Record<Listing["status"], string> = {
@@ -25,7 +25,17 @@ export function ListingCard({
 }) {
   return (
     <Card withBorder radius="lg" p="lg">
-      <Stack gap="sm">
+      <Card.Section>
+        <Image
+          src={listing.imageUrl ?? "/placeholder.jpg"}
+          alt={listing.title}
+          height={200}
+          fit="cover"
+          fallbackSrc="https://placehold.co/400x200?text=Bez+fotky"
+        />
+      </Card.Section>
+
+      <Stack gap="sm" mt="md">
         <Group justify="space-between" align="flex-start">
           <div>
             <Title order={3}>{listing.title}</Title>
@@ -43,19 +53,17 @@ export function ListingCard({
             : `${listing.price?.toLocaleString("cs-CZ")} Kč`}
         </Text>
         <Text size="sm" lineClamp={3}>
-            {listing.description}
+          {listing.description}
         </Text>
 
         <Group justify="space-between" align="center" mt="sm">
-            <Text size="sm" c="dimmed">
-              {listing.contact}
-            </Text>
-
-            <Button component={Link} href={`/${locale}/listings/${listing.id}`}>
-              Detail
-            </Button>
+          <Text size="sm" c="dimmed">
+            {listing.contact}
+          </Text>
+          <Button component={Link} href={`${locale}/listings/${listing.id}`}>
+            Detail
+          </Button>
         </Group>
-
       </Stack>
     </Card>
   );

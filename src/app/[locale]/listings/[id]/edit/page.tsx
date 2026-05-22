@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
   Button, Card, Checkbox, Container, Group, Image,
   NumberInput, Select, Stack, Text, TextInput,
-  Textarea, Title,
+  Textarea, Title, Loader, Center,
 } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
@@ -16,22 +16,24 @@ import { useListings } from "@/components/listings/useListings";
 import { ImageUpload } from "@/components/listings/ImageUpload";
 
 type FormValues = {
-  title: string;
-  description: string;
-  price: number | undefined;
-  isFree: boolean;
-  category: ListingCategory | "";
-  contact: string;
+  title: string,
+  description: string,
+  price: number | undefined,
+  isFree: boolean,
+  category: ListingCategory | "",
+  contact: string,
 };
 
-export default function NewListingPage() {
+export default function EditListingPage() {
   const router = useRouter();
-  const params = useParams<{ locale?: string }>();
-  const locale =
-    Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
+  const params = useParams<{ locale?: string, id?: string }>();
+  const locale = Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
+  const id = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
 
-  const { addListing } = useListings();
+  const { listings, updateListing, refetch, ready } = useListings();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const listing = listings.find((item) => item.id === id);
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -50,32 +52,61 @@ export default function NewListingPage() {
     },
   });
 
-  const handleSubmit = (values: FormValues) => {
+  useEffect(() => {
+    if (listing) {
+      form.setValues({
+        title: listing.title,
+        description: listing.description,
+        price: listing.price ? Number(listing.price) : undefined,
+        isFree: listing.isFree,
+        category: listing.category,
+        contact: listing.contact,
+      });
+      setImageUrl(listing.imageUrl);
+    }
+  }, [listing]);
+
+  const handleSubmit = async (values: FormValues) => {
+    console.log("handleSubmit zavolán", values);
+
     if (!values.isFree && (values.price === undefined || values.price === null)) {
       form.setFieldError("price", "Cena je povinná, pokud nabídka není zdarma");
       return;
     }
 
-    addListing({
+    console.log("volám updateListing");
+
+    await updateListing(id, {
       title: values.title,
       description: values.description,
       price: values.isFree ? null : values.price ? Number(values.price) : null,
       isFree: values.isFree,
       category: values.category as ListingCategory,
-      status: "available",
       contact: values.contact,
       imageUrl: imageUrl,
     });
 
-    router.push(`/${locale}`);
+    console.log("updateListing hotovo");
+    window.location.href = `/${locale}/listings/${id}`;
   };
+
+  if (!ready) return <Container py="xl"><Center><Loader /></Center></Container>;
+
+  if (!listing) return (
+    <Container size="sm" py="xl">
+      <Stack gap="md">
+        <Title order={1}>Inzerát nenalezen</Title>
+        <Button component={Link} href={`/${locale}`}>Zpět na přehled</Button>
+      </Stack>
+    </Container>
+  );
 
   return (
     <Container size="sm" py="xl">
       <Stack gap="lg">
         <Group justify="space-between">
-          <Title order={1}>Nový inzerát</Title>
-          <Button component={Link} href={`/${locale}`} variant="subtle">
+          <Title order={1}>Upravit inzerát</Title>
+          <Button component={Link} href={`/${locale}/listings/${id}`} variant="subtle">
             Zpět
           </Button>
         </Group>
@@ -150,7 +181,9 @@ export default function NewListingPage() {
                 )}
               </Stack>
 
-              <Button type="submit">Uložit inzerát</Button>
+              <Button type="submit" onClick={() => console.log("klik", form.errors, form.values)}>
+                Uložit změny
+              </Button>
             </Stack>
           </form>
         </Card>
