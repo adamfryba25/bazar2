@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import {
   Badge, Button, Card, Container, Divider,
-  Group, Select, Stack, Text, Title
+  Group, Image, Select, Stack, Text, Title
 } from "@mantine/core";
 
 import { statuses, type ListingStatus } from "@/components/data/listings"
@@ -15,7 +15,7 @@ import { useUser } from "@clerk/nextjs";
 const statusLabels: Record<ListingStatus, string> = {
   available: "Dostupné",
   reserved: "Rezervováno",
-  sold: "Prodáno/předáno ",
+  sold: "Prodáno/předáno",
 };
 
 const statusColors: Record<ListingStatus, string> = {
@@ -73,6 +73,14 @@ export default function ListingDetailPage() {
                   }}
                   w={220}
                 />
+                <Button
+                  component={Link}
+                  href={`/${locale}/listings/${listing.id}/edit`}
+                  variant="light"
+                  mt={24}
+                >
+                  Upravit
+                </Button>
                 <Button color="red" variant="light" onClick={handleDelete} mt={24}>
                   Smazat
                 </Button>
@@ -81,8 +89,19 @@ export default function ListingDetailPage() {
           </Group>
         </Group>
 
-        <Card withBorder radius="lg" p="xl">
-          <Stack gap="md">
+        <Card withBorder radius="lg" p={0}>
+          {listing.imageUrl && (
+            <Card.Section>
+              <Image
+                src={listing.imageUrl}
+                alt={listing.title}
+                height={300}
+                fit="cover"
+                fallbackSrc="https://placehold.co/800x300?text=Bez+fotky"
+              />
+            </Card.Section>
+          )}
+          <Stack gap="md" p="xl">
             <Title order={1}>{listing.title}</Title>
             <Group gap="xs">
               <Badge variant="light">{listing.category}</Badge>

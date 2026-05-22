@@ -20,7 +20,7 @@ export function useListings() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
+  const fetchListings = () => {
     fetch("/api/listings")
       .then((res) => res.json())
       .then((data) => {
@@ -28,6 +28,10 @@ export function useListings() {
         setReady(true);
       })
       .catch(() => setReady(true));
+  };
+
+  useEffect(() => {
+    fetchListings();
   }, []);
 
   const addListing = async (listing: {
@@ -38,6 +42,7 @@ export function useListings() {
     category: ListingCategory;
     status: ListingStatus;
     contact: string;
+    imageUrl: string | null;
   }) => {
     const res = await fetch("/api/listings", {
       method: "POST",
@@ -48,18 +53,42 @@ export function useListings() {
     setListings((prev) => [newListing, ...prev]);
   };
 
+  const updateListing = async (id: string, listing: {
+    title: string;
+    description: string;
+    price: number | null;
+    isFree: boolean;
+    category: ListingCategory;
+    contact: string;
+    imageUrl: string | null;
+  }) => {
+    console.log("fetch URL:", `/api/listings/${id}`);
+    console.log("data:", listing);
+    const res = await fetch(`/api/listings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listing),
+    });
+    console.log("response status:", res.status);
+    const updated = await res.json();
+    console.log("updated:", updated);
+    setListings((prev) =>
+      prev.map((item) => (item.id === id ? updated : item))
+    );
+  };
+
   const updateListingStatus = async (id: string, status: ListingStatus) => {
-    await fetch (`/api/listings/${id}`, {
+    await fetch(`/api/listings/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
     setListings((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status}: item))
+      prev.map((item) => (item.id === id ? { ...item, status } : item))
     );
   };
 
-  const deleteListing = async (id:string) => {
+  const deleteListing = async (id: string) => {
     await fetch(`/api/listings/${id}`, { method: "DELETE" });
     setListings((prev) => prev.filter((item) => item.id !== id));
   };
@@ -67,8 +96,10 @@ export function useListings() {
   return {
     listings,
     addListing,
+    updateListing,
     updateListingStatus,
     deleteListing,
+    refetch: fetchListings,
     ready,
   };
 }
