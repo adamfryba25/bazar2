@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { notifications } from "@mantine/notifications";
 
 import {
   Button, Card, Checkbox, Container, Group, Image,
@@ -16,12 +17,12 @@ import { useListings } from "@/components/listings/useListings";
 import { ImageUpload } from "@/components/listings/ImageUpload";
 
 type FormValues = {
-  title: string,
-  description: string,
-  price: number | undefined,
-  isFree: boolean,
-  category: ListingCategory | "",
-  contact: string,
+  title: string;
+  description: string;
+  price: number | undefined;
+  isFree: boolean;
+  category: ListingCategory | "";
+  contact: string;
 };
 
 export default function EditListingPage() {
@@ -30,7 +31,7 @@ export default function EditListingPage() {
   const locale = Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
   const id = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
 
-  const { listings, updateListing, refetch, ready } = useListings();
+  const { listings, updateListing, ready } = useListings();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const listing = listings.find((item) => item.id === id);
@@ -67,14 +68,10 @@ export default function EditListingPage() {
   }, [listing]);
 
   const handleSubmit = async (values: FormValues) => {
-    console.log("handleSubmit zavolán", values);
-
     if (!values.isFree && (values.price === undefined || values.price === null)) {
       form.setFieldError("price", "Cena je povinná, pokud nabídka není zdarma");
       return;
     }
-
-    console.log("volám updateListing");
 
     await updateListing(id, {
       title: values.title,
@@ -86,7 +83,12 @@ export default function EditListingPage() {
       imageUrl: imageUrl,
     });
 
-    console.log("updateListing hotovo");
+    notifications.show({
+      title: "Inzerát upraven",
+      message: `Inzerát "${values.title}" byl úspěšně upraven.`,
+      color: "blue",
+    });
+
     window.location.href = `/${locale}/listings/${id}`;
   };
 
@@ -119,14 +121,12 @@ export default function EditListingPage() {
                 placeholder="Např. Psací stůl"
                 {...form.getInputProps("title")}
               />
-
               <Textarea
                 label="Popis"
                 minRows={5}
                 placeholder="Popiš stav, velikost a další detaily"
                 {...form.getInputProps("description")}
               />
-
               <Checkbox
                 label="Zdarma"
                 checked={form.values.isFree}
@@ -139,51 +139,35 @@ export default function EditListingPage() {
                   }
                 }}
               />
-
               <NumberInput
                 label="Cena"
                 placeholder="Např. 500"
                 disabled={form.values.isFree}
                 value={form.values.price}
                 onChange={(value) =>
-                  form.setFieldValue(
-                    "price",
-                    typeof value === "number" ? value : undefined
-                  )
+                  form.setFieldValue("price", typeof value === "number" ? value : undefined)
                 }
                 error={form.errors.price}
               />
-
               <Select
                 label="Kategorie"
                 data={categories}
                 placeholder="Vyber kategorii"
                 {...form.getInputProps("category")}
               />
-
               <TextInput
                 label="Kontakt"
                 placeholder="Např. jana@blogic.cz"
                 {...form.getInputProps("contact")}
               />
-
               <Stack gap="xs">
                 <Text size="sm" fw={500}>Fotka</Text>
                 <ImageUpload onUploadComplete={(url) => setImageUrl(url)} />
                 {imageUrl && (
-                  <Image
-                    src={imageUrl}
-                    alt="Náhled fotky"
-                    radius="md"
-                    h={200}
-                    fit="cover"
-                  />
+                  <Image src={imageUrl} alt="Náhled fotky" radius="md" h={200} fit="cover" />
                 )}
               </Stack>
-
-              <Button type="submit" onClick={() => console.log("klik", form.errors, form.values)}>
-                Uložit změny
-              </Button>
+              <Button type="submit">Uložit změny</Button>
             </Stack>
           </form>
         </Card>
