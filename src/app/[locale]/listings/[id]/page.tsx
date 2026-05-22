@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { notifications } from "@mantine/notifications";
 
 import {
   Badge, Button, Card, Container, Divider,
   Group, Image, Select, Stack, Text, Title
 } from "@mantine/core";
 
-import { statuses, type ListingStatus } from "@/components/data/listings"
+import { statuses, type ListingStatus } from "@/components/data/listings";
 import { useListings } from "@/components/listings/useListings";
 import { useUser } from "@clerk/nextjs";
 
@@ -39,6 +40,11 @@ export default function ListingDetailPage() {
   const handleDelete = () => {
     if (!confirm("Opravdu chceš smazat tento inzerát?")) return;
     deleteListing(id);
+    notifications.show({
+      title: "Inzerát smazán",
+      message: `Inzerát byl úspěšně smazán.`,
+      color: "red",
+    });
     router.push(`/${locale}`);
   };
 
@@ -70,6 +76,11 @@ export default function ListingDetailPage() {
                   onChange={(value) => {
                     if (!value) return;
                     updateListingStatus(listing.id, value as ListingStatus);
+                    notifications.show({
+                      title: "Stav změněn",
+                      message: `Stav inzerátu byl změněn na "${statusLabels[value as ListingStatus]}".`,
+                      color: "blue",
+                    });
                   }}
                   w={220}
                 />

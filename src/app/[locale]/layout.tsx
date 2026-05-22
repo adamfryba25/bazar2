@@ -1,11 +1,13 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
+import { Notifications } from "@mantine/notifications";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { Providers } from "@/components/infrastructure/Providers";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { routing } from "@/i18n/routing";
+import "@mantine/notifications/styles.css";
 
 export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;
@@ -22,6 +24,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <ClerkProvider afterSignOutUrl="/cs">
           <NextIntlClientProvider>
             <MantineProvider>
+              <Notifications position="top-right" />
               <ModalsProvider>
                 <Providers>
                   <PageLayout>{children}</PageLayout>
