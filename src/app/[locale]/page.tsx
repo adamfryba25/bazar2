@@ -6,14 +6,35 @@ import { useParams } from "next/navigation";
 import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 import {
-  Button, Center, Container, Group,
-  Loader, Select, SimpleGrid, Stack, Text, TextInput
+  Button, Card, Container, Group, Select,
+  SimpleGrid, Skeleton, Stack, Text, TextInput
 } from "@mantine/core";
 
-import { ListingCard, } from "@/components/listings/ListingCard";
+import { ListingCard } from "@/components/listings/ListingCard";
 import { useListings } from "@/components/listings/useListings";
 import { categories } from "@/components/data/listings";
 import { AdminLoginModal } from "@/components/auth/AdminLoginModal";
+
+function ListingCardSkeleton() {
+  return (
+    <Card withBorder radius="lg" p="lg">
+      <Card.Section>
+        <Skeleton height={200} />
+      </Card.Section>
+      <Stack gap="sm" mt="md">
+        <Skeleton height={20} width="70%" />
+        <Skeleton height={16} width="40%" />
+        <Skeleton height={24} width="30%" />
+        <Skeleton height={14} />
+        <Skeleton height={14} />
+        <Group justify="space-between" mt="sm">
+          <Skeleton height={14} width="40%" />
+          <Skeleton height={36} width={80} />
+        </Group>
+      </Stack>
+    </Card>
+  );
+}
 
 export default function Page() {
   const params = useParams<{ locale?: string }>();
@@ -72,26 +93,23 @@ export default function Page() {
         </Group>
 
         {!ready ? (
-          <Center py="xl">
-            <Loader />
-          </Center>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ListingCardSkeleton key={i} />
+            ))}
+          </SimpleGrid>
         ) : filteredListings.length === 0 ? (
-          <Center py="xl">
-            <Text c="dimmed">
-              {search
-                ? `Žádné inzeráty odpovídající "${search}".`
-                : "Žádné inzeráty v této kategorii."}
-            </Text>
-          </Center>
+          <Text c="dimmed" ta="center" py="xl">
+            {search
+              ? `Žádné inzeráty odpovídající "${search}".`
+              : "Žádné inzeráty v této kategorii."}
+          </Text>
         ) : (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
             {filteredListings.map((listing) => (
               <ListingCard
                 key={listing.id}
-                listing={{
-                  ...listing,
-                  price: listing.price ? Number(listing.price) : null,
-                }}
+                listing={listing}
                 locale={locale}
               />
             ))}
