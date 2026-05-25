@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { notifications } from "@mantine/notifications";
+import dynamic from "next/dynamic";
 
 import {
   Badge, Button, Card, Container, Divider,
@@ -12,6 +13,11 @@ import {
 import { statuses, type ListingStatus } from "@/components/data/listings";
 import { useListings } from "@/components/listings/useListings";
 import { useUser } from "@clerk/nextjs";
+
+const ListingsMap = dynamic(
+  () => import("@/components/listings/ListingsMap").then((m) => m.ListingsMap),
+  { ssr: false }
+);
 
 const statusLabels: Record<ListingStatus, string> = {
   available: "Dostupné",
@@ -138,6 +144,16 @@ export default function ListingDetailPage() {
             <Divider />
             <Text>{listing.description}</Text>
             <Text c="dimmed">Kontakt: {listing.contact}</Text>
+
+            {/* Mapa — zobrazí se jen pokud má inzerát polohu */}
+            {listing.location && (
+              <Stack gap="xs">
+                <Divider />
+                <Text fw={500}>Poloha</Text>
+                <Text c="dimmed" size="sm">{listing.location.address}</Text>
+                <ListingsMap listings={[listing]} />
+              </Stack>
+            )}
           </Stack>
         </Card>
       </Stack>

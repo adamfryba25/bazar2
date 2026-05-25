@@ -87,7 +87,7 @@ export default function Page() {
     <Container size="xl" py="xl">
       <Stack gap="lg">
 
-        {/* Hlavička — na mobilu pod sebou, na desktopu vedle sebe */}
+        {/* Hlavička */}
         <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Text c="dimmed">
             Vyber si inzerát, otevři detail nebo přidej nový
@@ -110,7 +110,7 @@ export default function Page() {
           </Group>
         </Group>
 
-        {/* Filtry — na mobilu každý přes celou šířku, na desktopu vedle sebe */}
+        {/* Filtry */}
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
           <TextInput
             placeholder="Hledat inzeráty"

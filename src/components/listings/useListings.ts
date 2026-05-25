@@ -14,6 +14,11 @@ export type Listing = {
   contact: string;
   imageUrl: string | null;
   createdAt: string;
+  location?: {
+    address: string;
+    lat: number;
+    lng: number;
+  };
 };
 
 export function useListings() {
@@ -43,6 +48,11 @@ export function useListings() {
     status: ListingStatus;
     contact: string;
     imageUrl: string | null;
+    location?: {
+      address: string;
+      lat: number;
+      lng: number;
+    };
   }) => {
     const res = await fetch("/api/listings", {
       method: "POST",
