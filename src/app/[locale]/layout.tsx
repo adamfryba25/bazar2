@@ -17,13 +17,14 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   }
 
   return (
-    <html lang={locale} {...mantineHtmlProps}>
+    <html lang={locale} {...mantineHtmlProps} suppressHydrationWarning>
       <head>
+        <ColorSchemeScript defaultColorScheme="auto" />
       </head>
       <body>
         <ClerkProvider afterSignOutUrl="/cs">
           <NextIntlClientProvider>
-            <MantineProvider>
+            <MantineProvider defaultColorScheme="auto">
               <Notifications position="top-right" />
               <ModalsProvider>
                 <Providers>
