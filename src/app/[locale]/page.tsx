@@ -70,7 +70,7 @@ export default function Page() {
       }
       if (sortOrder === "desc") {
         if (a.isFree) return 1;
-        if (b.price) return -1;
+        if (b.isFree) return -1;
         return Number(b.price) - Number(a.price);
       }
       return 0;
@@ -86,12 +86,13 @@ export default function Page() {
   return (
     <Container size="xl" py="xl">
       <Stack gap="lg">
-        <Group justify="space-between" align="flex-start">
+
+        {/* Hlavička — na mobilu pod sebou, na desktopu vedle sebe */}
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap="sm">
           <Text c="dimmed">
             Vyber si inzerát, otevři detail nebo přidej nový
           </Text>
-
-          <Group>
+          <Group gap="sm">
             <SignedOut>
               <SignInButton mode="modal">
                 <Button variant="subtle">Přihlásit se</Button>
@@ -109,19 +110,18 @@ export default function Page() {
           </Group>
         </Group>
 
-        <Group align="flex-start" wrap="wrap">
+        {/* Filtry — na mobilu každý přes celou šířku, na desktopu vedle sebe */}
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
           <TextInput
             placeholder="Hledat inzeráty"
             value={search}
             onChange={(e) => { setSearch(e.target.value); handleFilterChange(); }}
-            w={300}
           />
           <Select
             placeholder="Všechny kategorie"
             data={[{ value: "", label: "Všechny kategorie" }, ...categories]}
             value={selectedCategory}
             onChange={(val) => { setSelectedCategory(val || null); handleFilterChange(); }}
-            w={220}
           />
           <Select
             placeholder="Řadit podle ceny"
@@ -132,23 +132,22 @@ export default function Page() {
             ]}
             value={sortOrder}
             onChange={(val) => { setSortOrder(val || null); handleFilterChange(); }}
-            w={200}
           />
           <NumberInput
             placeholder="Min. cena"
             value={minPrice}
             onChange={(val) => { setMinPrice(typeof val === "number" ? val : undefined); handleFilterChange(); }}
             min={0}
-            w={130}
           />
           <NumberInput
             placeholder="Max. cena"
             value={maxPrice}
             onChange={(val) => { setMaxPrice(typeof val === "number" ? val : undefined); handleFilterChange(); }}
             min={0}
-            w={130}
           />
-        </Group>
+        </SimpleGrid>
+
+        {/* Inzeráty */}
         {!ready ? (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
             {Array.from({ length: 6 }).map((_, i) => (
