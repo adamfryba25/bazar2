@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 import {
-  Button, Card, Container, Group, NumberInput, Select,
+  Button, Card, Center, Container, Group, NumberInput, Select,
   SimpleGrid, Skeleton, Stack, Text, TextInput
 } from "@mantine/core";
 
@@ -14,6 +14,8 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { useListings } from "@/components/listings/useListings";
 import { categories } from "@/components/data/listings";
 import { AdminLoginModal } from "@/components/auth/AdminLoginModal";
+
+const PAGE_SIZE = 6;
 
 function ListingCardSkeleton() {
   return (
@@ -48,13 +50,14 @@ export default function Page() {
   const [sortOrder, setSortOrder] = useState<string | null>(null);
   const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filteredListings = listings
     .filter((l) => !selectedCategory || l.category === selectedCategory)
     .filter((l) => l.title.toLowerCase().includes(search.toLowerCase()))
     .filter((l) => {
       if (l.isFree) return true;
-      const price = Number(l.price)
+      const price = Number(l.price);
       if (minPrice !== undefined && price < minPrice) return false;
       if (maxPrice !== undefined && price > maxPrice) return false;
       return true;
@@ -67,11 +70,18 @@ export default function Page() {
       }
       if (sortOrder === "desc") {
         if (a.isFree) return 1;
-        if (b.isFree) return -1;
+        if (b.price) return -1;
         return Number(b.price) - Number(a.price);
       }
       return 0;
     });
+
+  const visibleListings = filteredListings.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredListings.length;
+
+  const handleFilterChange = () => {
+    setVisibleCount(PAGE_SIZE);
+  };
 
   return (
     <Container size="xl" py="xl">
@@ -103,14 +113,14 @@ export default function Page() {
           <TextInput
             placeholder="Hledat inzeráty"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); handleFilterChange(); }}
             w={300}
           />
           <Select
             placeholder="Všechny kategorie"
             data={[{ value: "", label: "Všechny kategorie" }, ...categories]}
             value={selectedCategory}
-            onChange={(val) => setSelectedCategory(val || null)}
+            onChange={(val) => { setSelectedCategory(val || null); handleFilterChange(); }}
             w={220}
           />
           <Select
@@ -121,25 +131,24 @@ export default function Page() {
               { value: "desc", label: "Cena od nejvyššího" },
             ]}
             value={sortOrder}
-            onChange={(val) => setSortOrder(val || null)}
+            onChange={(val) => { setSortOrder(val || null); handleFilterChange(); }}
             w={200}
           />
           <NumberInput
             placeholder="Min. cena"
             value={minPrice}
-            onChange={(val) => setMinPrice(typeof val === "number" ? val : undefined)}
+            onChange={(val) => { setMinPrice(typeof val === "number" ? val : undefined); handleFilterChange(); }}
             min={0}
             w={130}
           />
           <NumberInput
             placeholder="Max. cena"
             value={maxPrice}
-            onChange={(val) => setMaxPrice(typeof val === "number" ? val : undefined)}
+            onChange={(val) => { setMaxPrice(typeof val === "number" ? val : undefined); handleFilterChange(); }}
             min={0}
             w={130}
           />
         </Group>
-
         {!ready ? (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -150,18 +159,31 @@ export default function Page() {
           <Text c="dimmed" ta="center" py="xl">
             {search
               ? `Žádné inzeráty neodpovídající "${search}".`
-              : "Žádné inzeráty v tomto filtru"}
+              : "Žádné inzeráty v tomto filtru."}
           </Text>
         ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-            {filteredListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                locale={locale}
-              />
-            ))}
-          </SimpleGrid>
+          <Stack gap="lg">
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+              {visibleListings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  locale={locale}
+                />
+              ))}
+            </SimpleGrid>
+
+            {hasMore && (
+              <Center>
+                <Button
+                  variant="outline"
+                  onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                >
+                  Načíst více ({filteredListings.length - visibleCount} zbývá)
+                </Button>
+              </Center>
+            )}
+          </Stack>
         )}
       </Stack>
 
