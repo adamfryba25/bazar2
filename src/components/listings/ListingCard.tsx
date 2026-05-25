@@ -33,7 +33,7 @@ export function ListingCard({
   listing,
   locale,
 }: {
-  listing: Listing & { price: number | null };
+  listing: Listing & { price: string | null };
   locale: string;
 }) {
   return (
