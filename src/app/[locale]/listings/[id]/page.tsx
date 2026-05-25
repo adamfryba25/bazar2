@@ -42,10 +42,19 @@ export default function ListingDetailPage() {
     deleteListing(id);
     notifications.show({
       title: "Inzerát smazán",
-      message: `Inzerát byl úspěšně smazán.`,
+      message: "Inzerát byl úspěšně smazán.",
       color: "red",
     });
     router.push(`/${locale}`);
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    notifications.show({
+      title: "Odkaz zkopírován",
+      message: "Odkaz na inzerát byl zkopírován do schránky.",
+      color: "green",
+    });
   };
 
   if (!ready) return <Container py="xl"><Text>Načítám...</Text></Container>;
@@ -67,6 +76,9 @@ export default function ListingDetailPage() {
             ← Zpět
           </Button>
           <Group>
+            <Button variant="subtle" onClick={handleShare}>
+              Sdílet
+            </Button>
             {isSignedIn && (
               <>
                 <Select

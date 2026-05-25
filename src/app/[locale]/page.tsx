@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 import {
-  Button, Card, Container, Group, Select,
+  Button, Card, Container, Group, NumberInput, Select,
   SimpleGrid, Skeleton, Stack, Text, TextInput
 } from "@mantine/core";
 
@@ -45,10 +45,33 @@ export default function Page() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [loginOpen, setLoginOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<string | null>(null);
+  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
 
   const filteredListings = listings
     .filter((l) => !selectedCategory || l.category === selectedCategory)
-    .filter((l) => l.title.toLowerCase().includes(search.toLowerCase()));
+    .filter((l) => l.title.toLowerCase().includes(search.toLowerCase()))
+    .filter((l) => {
+      if (l.isFree) return true;
+      const price = Number(l.price)
+      if (minPrice !== undefined && price < minPrice) return false;
+      if (maxPrice !== undefined && price > maxPrice) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "asc") {
+        if (a.isFree) return -1;
+        if (b.isFree) return 1;
+        return Number(a.price) - Number(b.price);
+      }
+      if (sortOrder === "desc") {
+        if (a.isFree) return 1;
+        if (b.isFree) return -1;
+        return Number(b.price) - Number(a.price);
+      }
+      return 0;
+    });
 
   return (
     <Container size="xl" py="xl">
@@ -76,7 +99,7 @@ export default function Page() {
           </Group>
         </Group>
 
-        <Group align="flex-end">
+        <Group align="flex-start" wrap="wrap">
           <TextInput
             placeholder="Hledat inzeráty"
             value={search}
@@ -88,7 +111,32 @@ export default function Page() {
             data={[{ value: "", label: "Všechny kategorie" }, ...categories]}
             value={selectedCategory}
             onChange={(val) => setSelectedCategory(val || null)}
-            w={260}
+            w={220}
+          />
+          <Select
+            placeholder="Řadit podle ceny"
+            data={[
+              { value: "", label: "Výchozí řazení" },
+              { value: "asc", label: "Cena od nejnižšího" },
+              { value: "desc", label: "Cena od nejvyššího" },
+            ]}
+            value={sortOrder}
+            onChange={(val) => setSortOrder(val || null)}
+            w={200}
+          />
+          <NumberInput
+            placeholder="Min. cena"
+            value={minPrice}
+            onChange={(val) => setMinPrice(typeof val === "number" ? val : undefined)}
+            min={0}
+            w={130}
+          />
+          <NumberInput
+            placeholder="Max. cena"
+            value={maxPrice}
+            onChange={(val) => setMaxPrice(typeof val === "number" ? val : undefined)}
+            min={0}
+            w={130}
           />
         </Group>
 
@@ -101,8 +149,8 @@ export default function Page() {
         ) : filteredListings.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">
             {search
-              ? `Žádné inzeráty odpovídající "${search}".`
-              : "Žádné inzeráty v této kategorii."}
+              ? `Žádné inzeráty neodpovídající "${search}".`
+              : "Žádné inzeráty v tomto filtru"}
           </Text>
         ) : (
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
