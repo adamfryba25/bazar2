@@ -1,4 +1,4 @@
-import { boolean, numeric, pgEnum, pgTable, text, timestamp, uuid} from "drizzle-orm/pg-core";
+import { boolean, numeric, pgEnum, pgTable, real, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const categoryEnum = pgEnum("category", [
   "Nábytek",
@@ -26,6 +26,9 @@ export const listings = pgTable("listings", {
   contact: text("contact").notNull(),
   imageUrl: text("image_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  locationAddress: text("location_address"),
+  locationLat: real("location_lat"),
+  locationLng: real("location_lng"),
 });
 
 export type dbListing = typeof listings.$inferSelect;

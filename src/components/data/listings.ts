@@ -18,6 +18,11 @@ export type Listing = {
   status: ListingStatus,
   contact: string,
   imageUrl: string | null,
+  location?: {
+    address: string,
+    lat: number,
+    lng: number,
+  },
 };
 
 export const categories: ListingCategory[] = [
@@ -39,34 +44,49 @@ export const initialListings: Listing[] = [
   {
     id: "1",
     title: "Iphone 13 Pro Max",
-    description: "Prodám Iphone 13 Pro Max, stav jako nový, bez škrábanců.",
+    description: "Prodám Iphone 13 Pro Max, stav jako nový, bez škrábanců",
     price: 12000,
     isFree: false,
     category: "Elektronika",
     status: "available",
     contact: "adam@blogic.cz",
     imageUrl: null,
+    location: {
+      address: "Praha, Česká republika",
+      lat: 50.0755,
+      lng: 14.4378,
+    },
   },
   {
     id: "2",
     title: "Horské kolo",
-    description: "Prodám horské kolo, používáné, ale v dobrém stavu.",
+    description: "Prodám horské kolo, používané, ale v dobrém stavu",
     price: 8000,
     isFree: false,
     category: "Ostatní",
     status: "reserved",
     contact: "martin.k@seznam.cz",
     imageUrl: null,
+    location: {
+      address: "Brno, Česká Republika",
+      lat: 49.1951,
+      lng: 16.6068,
+    },
   },
   {
     id: "3",
     title: "Playstation 1",
-    description: "Prodám Playstation 1, funkční, ale s kosmetickými vadami",
+    description: "Prodám Playstation 1, funkční, ale s kosmetyckými vadami",
     price: 4000,
     isFree: false,
     category: "Elektronika",
     status: "sold",
     contact: "retro.gaming@gmail.com",
     imageUrl: null,
+    location: {
+      address: "Ostrava, Česká Republika",
+      lat: 49.8209,
+      lng: 18.2625,
+    },
   },
 ];

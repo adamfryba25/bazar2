@@ -23,7 +23,22 @@ type FormValues = {
   isFree: boolean;
   category: ListingCategory | "";
   contact: string;
+  address: string;
 };
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
+      { headers: { "Accept-Language": "cs" } }
+    );
+    const data = await res.json();
+    if (data.length === 0) return null;
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch {
+    return null;
+  }
+}
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -41,6 +56,7 @@ export default function NewListingPage() {
       isFree: false,
       category: "",
       contact: "",
+      address: "",
     },
     validate: {
       title: (value) => (value.trim().length ? null : "Název je povinný"),
@@ -52,9 +68,22 @@ export default function NewListingPage() {
 
   const handleSubmit = async (values: FormValues) => {
     if (!values.isFree && (values.price === undefined || values.price === null)) {
-      form.setFieldError("price", "Cena je povinná, pokud nabídka není zdarma.")
+      form.setFieldError("price", "Cena je povinná, pokud nabídka není zdarma.");
       return;
-      ;
+    }
+
+    let location = undefined;
+    if (values.address.trim()) {
+      const coords = await geocodeAddress(values.address);
+      if (coords) {
+        location = { address: values.address, ...coords };
+      } else {
+        notifications.show({
+          title: "Adresa nenalezena",
+          message: "Adresu se nepodařilo najít na mapě, inzerát bude uložen bez polohy.",
+          color: "yellow",
+        });
+      }
     }
 
     await addListing({
@@ -66,6 +95,7 @@ export default function NewListingPage() {
       status: "available",
       contact: values.contact,
       imageUrl: imageUrl,
+      location,
     });
 
     notifications.show({
@@ -133,6 +163,12 @@ export default function NewListingPage() {
                 label="Kontakt"
                 placeholder="Např. jana@blogic.cz"
                 {...form.getInputProps("contact")}
+              />
+              <TextInput
+                label="Adresa (pro zobrazení na mapě)"
+                placeholder="Např. Praha, Česká republika"
+                description="Nepovinné — zadej město nebo ulici"
+                {...form.getInputProps("address")}
               />
               <Stack gap="xs">
                 <Text size="sm" fw={500}>Fotka</Text>
