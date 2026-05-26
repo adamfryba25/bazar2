@@ -13,6 +13,7 @@ import {
 import { statuses, type ListingStatus } from "@/components/data/listings";
 import { useListings } from "@/components/listings/useListings";
 import { useUser } from "@clerk/nextjs";
+import { ListingChat } from "@/components/listings/ListingChat";
 
 const ListingsMap = dynamic(
   () => import("@/components/listings/ListingsMap").then((m) => m.ListingsMap),
@@ -145,7 +146,6 @@ export default function ListingDetailPage() {
             <Text>{listing.description}</Text>
             <Text c="dimmed">Kontakt: {listing.contact}</Text>
 
-            {/* Mapa — zobrazí se jen pokud má inzerát polohu */}
             {listing.location && (
               <Stack gap="xs">
                 <Divider />
@@ -154,6 +154,9 @@ export default function ListingDetailPage() {
                 <ListingsMap listings={[listing]} />
               </Stack>
             )}
+
+            <Divider />
+            <ListingChat listingId={listing.id} />
           </Stack>
         </Card>
       </Stack>

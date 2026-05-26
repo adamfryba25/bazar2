@@ -12,7 +12,7 @@ export const categoryEnum = pgEnum("category", [
 export const statusEnum = pgEnum("status", [
   "available",
   "reserved",
-  "sold",
+  "sold"
 ]);
 
 export const listings = pgTable("listings", {
@@ -31,5 +31,16 @@ export const listings = pgTable("listings", {
   locationLng: real("location_lng"),
 });
 
+export const messages = pgTable("messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  listingId: uuid("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  userName: text("user_name").notNull(),
+  text: text("text").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type dbListing = typeof listings.$inferSelect;
 export type NewListing = typeof listings.$inferInsert;
+export type dbMessages = typeof listings.$inferSelect;
+export type NewMessages = typeof listings.$inferInsert;
