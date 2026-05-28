@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { listings } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET() {
   try {
@@ -13,14 +14,24 @@ export async function GET() {
         : null,
     })));
   } catch (error) {
-    return NextResponse.json({ error: "Chyba při načítání" }, { status: 500 });
+    console.error("GET error:", error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+
+    console.log("POST userId:", userId); // ← DEBUG
+
+    if (!userId) {
+      return NextResponse.json({ error: "Nejsi přihlášen" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const newListing = await db.insert(listings).values({
+    const NewListing = await db.insert(listings).values({
+      userId,
       title: body.title,
       description: body.description,
       price: body.price?.toString() ?? null,
@@ -29,12 +40,14 @@ export async function POST(request: Request) {
       status: "available",
       contact: body.contact,
       imageUrl: body.imageUrl ?? null,
+      color: body.color ?? "#ffffff",
       locationAddress: body.location?.address ?? null,
       locationLat: body.location?.lat ?? null,
       locationLng: body.location?.lng ?? null,
     }).returning();
-    return NextResponse.json(newListing[0]);
+    return NextResponse.json(NewListing[0]);
   } catch (error) {
-    return NextResponse.json({ error: "Chyba při vytváření" }, { status: 500 });
+    console.error("POST error:", error);
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import type { ListingCategory, ListingStatus } from "@/components/data/listings"
 
 export type Listing = {
   id: string;
+  userId?: string | null;
   title: string;
   description: string;
   price: string | null;
@@ -13,12 +14,13 @@ export type Listing = {
   status: ListingStatus;
   contact: string;
   imageUrl: string | null;
+  color?: string | null;
   createdAt: string;
   location?: {
     address: string;
     lat: number;
     lng: number;
-  };
+  } | null;
 };
 
 export function useListings() {
@@ -29,7 +31,7 @@ export function useListings() {
     fetch("/api/listings")
       .then((res) => res.json())
       .then((data) => {
-        setListings(data);
+        setListings(Array.isArray(data) ? data : []); // ← ochrana
         setReady(true);
       })
       .catch(() => setReady(true));
@@ -48,6 +50,7 @@ export function useListings() {
     status: ListingStatus;
     contact: string;
     imageUrl: string | null;
+    color?: string | null;
     location?: {
       address: string;
       lat: number;
@@ -71,17 +74,14 @@ export function useListings() {
     category: ListingCategory;
     contact: string;
     imageUrl: string | null;
+    color?: string | null;
   }) => {
-    console.log("fetch URL:", `/api/listings/${id}`);
-    console.log("data:", listing);
     const res = await fetch(`/api/listings/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(listing),
     });
-    console.log("response status:", res.status);
     const updated = await res.json();
-    console.log("updated:", updated);
     setListings((prev) =>
       prev.map((item) => (item.id === id ? updated : item))
     );

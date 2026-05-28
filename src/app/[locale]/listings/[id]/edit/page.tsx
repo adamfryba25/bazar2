@@ -12,8 +12,9 @@ import {
 } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
-import { categories, type ListingCategory } from "@/components/data/listings";
+import { categories, categoryColors, type ListingCategory } from "@/components/data/listings";
 import { useListings } from "@/components/listings/useListings";
+import { useUser } from "@clerk/nextjs";
 import { ImageUpload } from "@/components/listings/ImageUpload";
 
 type FormValues = {
@@ -32,9 +33,11 @@ export default function EditListingPage() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
 
   const { listings, updateListing, ready } = useListings();
+  const { isSignedIn, user, isLoaded } = useUser();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const listing = listings.find((item) => item.id === id);
+  const isOwner = isSignedIn && user?.id === listing?.userId;
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -81,6 +84,7 @@ export default function EditListingPage() {
       category: values.category as ListingCategory,
       contact: values.contact,
       imageUrl: imageUrl,
+      color: categoryColors[values.category as ListingCategory] ?? "#ffffff",
     });
 
     notifications.show({
@@ -89,16 +93,26 @@ export default function EditListingPage() {
       color: "blue",
     });
 
-    window.location.href = `/${locale}/listings/${id}`;
+    router.push(`/${locale}/listings/${id}`);
   };
 
-  if (!ready) return <Container py="xl"><Center><Loader /></Center></Container>;
+  if (!ready || !isLoaded) return <Container py="xl"><Center><Loader /></Center></Container>;
 
   if (!listing) return (
     <Container size="sm" py="xl">
       <Stack gap="md">
         <Title order={1}>Inzerát nenalezen</Title>
         <Button component={Link} href={`/${locale}`}>Zpět na přehled</Button>
+      </Stack>
+    </Container>
+  );
+
+  if (listing?.userId && !isOwner) return (
+    <Container size="sm" py="xl">
+      <Stack gap="md">
+        <Title order={1}>Nemáš oprávnění</Title>
+        <Text c="dimmed">Tento inzerát může upravit pouze jeho vlastník.</Text>
+        <Button component={Link} href={`/${locale}/listings/${id}`}>Zpět na inzerát</Button>
       </Stack>
     </Container>
   );
@@ -167,6 +181,7 @@ export default function EditListingPage() {
                   <Image src={imageUrl} alt="Náhled fotky" radius="md" h={200} fit="cover" />
                 )}
               </Stack>
+
               <Button type="submit">Uložit změny</Button>
             </Stack>
           </form>

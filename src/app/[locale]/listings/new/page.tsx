@@ -15,6 +15,7 @@ import { useForm } from "@mantine/form";
 import { categories, type ListingCategory } from "@/components/data/listings";
 import { useListings } from "@/components/listings/useListings";
 import { ImageUpload } from "@/components/listings/ImageUpload";
+import { ListingColorPicker } from "@/components/listings/ColorPicker";
 
 type FormValues = {
   title: string;
@@ -24,6 +25,7 @@ type FormValues = {
   category: ListingCategory | "";
   contact: string;
   address: string;
+  color: string;
 };
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -57,6 +59,7 @@ export default function NewListingPage() {
       category: "",
       contact: "",
       address: "",
+      color: "#ffffff",
     },
     validate: {
       title: (value) => (value.trim().length ? null : "Název je povinný"),
@@ -67,6 +70,8 @@ export default function NewListingPage() {
   });
 
   const handleSubmit = async (values: FormValues) => {
+    console.log("handleSubmit spuštěn", values); // ← DEBUG
+
     if (!values.isFree && (values.price === undefined || values.price === null)) {
       form.setFieldError("price", "Cena je povinná, pokud nabídka není zdarma.");
       return;
@@ -95,6 +100,7 @@ export default function NewListingPage() {
       status: "available",
       contact: values.contact,
       imageUrl: imageUrl,
+      color: values.color,
       location,
     });
 
@@ -177,6 +183,12 @@ export default function NewListingPage() {
                   <Image src={imageUrl} alt="Náhled fotky" radius="md" h={200} fit="cover" />
                 )}
               </Stack>
+
+              <ListingColorPicker
+                value={form.values.color}
+                onChange={(color) => form.setFieldValue("color", color)}
+              />
+
               <Button type="submit">Uložit inzerát</Button>
             </Stack>
           </form>

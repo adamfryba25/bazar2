@@ -36,8 +36,16 @@ export function ListingCard({
   listing: Listing & { price: string | null };
   locale: string;
 }) {
+  const hasColor = listing.color && listing.color !== "#ffffff";
+  const textColor = hasColor ? "#333333" : undefined;
+
   return (
-    <Card withBorder radius="lg" p="lg">
+    <Card
+      withBorder
+      radius="lg"
+      p="lg"
+      style={{ backgroundColor: listing.color ?? undefined }}
+    >
       <Card.Section>
         <Image
           src={listing.imageUrl ?? "/placeholder.jpg"}
@@ -51,26 +59,28 @@ export function ListingCard({
       <Stack gap="sm" mt="md">
         <Group justify="space-between" align="flex-start">
           <div>
-            <Title order={3}>{listing.title}</Title>
-            <Text size="sm" c="dimmed">
+            <Title order={3} style={{ color: textColor }}>
+              {listing.title}
+            </Title>
+            <Text size="sm" style={{ color: textColor ?? "var(--mantine-color-dimmed)" }}>
               {listing.category}
             </Text>
           </div>
-          <Badge color={statusColors[listing.status]} variant="light">
-            {statusLabels[listing.status]}
+          <Badge color={hasColor ? "dark" : undefined} variant={hasColor ? "outline" : "light"} style={{ color: textColor }}>
+            {listing.category}
           </Badge>
         </Group>
-        <Text fw={700} c="orange" size="lg">
+        <Text fw={700} size="lg" style={{ color: hasColor ? "#e07b00" : "var(--mantine-color-orange-6)" }}>
           {listing.isFree
             ? "Zdarma"
             : `${Number(listing.price)?.toLocaleString("cs-CZ")} Kč`}
         </Text>
-        <Text size="sm" lineClamp={3}>
+        <Text size="sm" lineClamp={3} style={{ color: textColor }}>
           {listing.description}
         </Text>
         <Group justify="space-between" align="center" mt="sm">
           <Stack gap={2}>
-            <Text size="sm" c="dimmed">
+            <Text size="sm" style={{ color: textColor ?? "var(--mantine-color-dimmed)" }}>
               Přidáno: {formatDate(listing.createdAt)}
             </Text>
           </Stack>
