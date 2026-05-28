@@ -1,163 +1,187 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { notifications } from "@mantine/notifications";
-import dynamic from "next/dynamic";
 
 import {
-  Badge, Button, Card, Container, Divider,
-  Group, Image, Select, Stack, Text, Title
+  Button, Card, Checkbox, Container, Group, Image,
+  NumberInput, Select, Stack, Text, TextInput,
+  Textarea, Title,
 } from "@mantine/core";
 
-import { statuses, type ListingStatus } from "@/components/data/listings";
+import { useForm } from "@mantine/form";
+import { categories, categoryColors, type ListingCategory } from "@/components/data/listings";
 import { useListings } from "@/components/listings/useListings";
-import { useUser } from "@clerk/nextjs";
-import { ListingChat } from "@/components/listings/ListingChat";
+import { ImageUpload } from "@/components/listings/ImageUpload";
 
-const ListingsMap = dynamic(
-  () => import("@/components/listings/ListingsMap").then((m) => m.ListingsMap),
-  { ssr: false }
-);
-
-const statusLabels: Record<ListingStatus, string> = {
-  available: "Dostupné",
-  reserved: "Rezervováno",
-  sold: "Prodáno/předáno",
+type FormValues = {
+  title: string;
+  description: string;
+  price: number | undefined;
+  isFree: boolean;
+  category: ListingCategory | "";
+  contact: string;
+  address: string;
 };
 
-const statusColors: Record<ListingStatus, string> = {
-  available: "green",
-  reserved: "yellow",
-  sold: "gray",
-};
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
+      { headers: { "Accept-Language": "cs" } }
+    );
+    const data = await res.json();
+    if (data.length === 0) return null;
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch {
+    return null;
+  }
+}
 
-export default function ListingDetailPage() {
-  const params = useParams<{ locale?: string, id?: string }>();
+export default function NewListingPage() {
   const router = useRouter();
-
+  const params = useParams<{ locale?: string }>();
   const locale = Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
-  const id = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
 
-  const { listings, updateListingStatus, deleteListing, ready } = useListings();
-  const { isSignedIn } = useUser();
+  const { addListing } = useListings();
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  const listing = listings.find((item) => item.id === id);
+  const form = useForm<FormValues>({
+    initialValues: {
+      title: "",
+      description: "",
+      price: undefined,
+      isFree: false,
+      category: "",
+      contact: "",
+      address: "",
+    },
+    validate: {
+      title: (value) => (value.trim().length ? null : "Název je povinný"),
+      description: (value) => (value.trim().length ? null : "Popis je povinný"),
+      category: (value) => (value ? null : "Kategorie je povinná"),
+      contact: (value) => (value.trim().length ? null : "Kontakt je povinný"),
+    },
+  });
 
-  const handleDelete = () => {
-    if (!confirm("Opravdu chceš smazat tento inzerát?")) return;
-    deleteListing(id);
-    notifications.show({
-      title: "Inzerát smazán",
-      message: "Inzerát byl úspěšně smazán.",
-      color: "red",
+  const handleSubmit = async (values: FormValues) => {
+    if (!values.isFree && (values.price === undefined || values.price === null)) {
+      form.setFieldError("price", "Cena je povinná, pokud nabídka není zdarma.");
+      return;
+    }
+
+    let location = undefined;
+    if (values.address.trim()) {
+      const coords = await geocodeAddress(values.address);
+      if (coords) {
+        location = { address: values.address, ...coords };
+      } else {
+        notifications.show({
+          title: "Adresa nenalezena",
+          message: "Adresu se nepodařilo najít na mapě, inzerát bude uložen bez polohy.",
+          color: "yellow",
+        });
+      }
+    }
+
+    await addListing({
+      title: values.title,
+      description: values.description,
+      price: values.isFree ? null : values.price ? Number(values.price) : null,
+      isFree: values.isFree,
+      category: values.category as ListingCategory,
+      status: "available",
+      contact: values.contact,
+      imageUrl: imageUrl,
+      color: categoryColors[values.category as ListingCategory] ?? "#ffffff",
+      location,
     });
-    router.push(`/${locale}`);
-  };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
     notifications.show({
-      title: "Odkaz zkopírován",
-      message: "Odkaz na inzerát byl zkopírován do schránky.",
+      title: "Inzerát přidán",
+      message: `Inzerát "${values.title}" byl úspěšně přidán.`,
       color: "green",
     });
+
+    router.push(`/${locale}`);
   };
-
-  if (!ready) return <Container py="xl"><Text>Načítám...</Text></Container>;
-
-  if (!listing) return (
-    <Container size="sm" py="xl">
-      <Stack gap="md">
-        <Title order={1}>Inzerát nenalezen</Title>
-        <Button component={Link} href={`/${locale}`}>Zpět na přehled</Button>
-      </Stack>
-    </Container>
-  );
 
   return (
     <Container size="sm" py="xl">
       <Stack gap="lg">
-        <Group justify="space-between" align="center">
+        <Group justify="space-between">
+          <Title order={1}>Nový inzerát</Title>
           <Button component={Link} href={`/${locale}`} variant="subtle">
-            ← Zpět
+            Zpět
           </Button>
-          <Group>
-            <Button variant="subtle" onClick={handleShare}>
-              Sdílet
-            </Button>
-            {isSignedIn && (
-              <>
-                <Select
-                  label="Stav"
-                  data={statuses}
-                  value={listing.status}
-                  onChange={(value) => {
-                    if (!value) return;
-                    updateListingStatus(listing.id, value as ListingStatus);
-                    notifications.show({
-                      title: "Stav změněn",
-                      message: `Stav inzerátu byl změněn na "${statusLabels[value as ListingStatus]}".`,
-                      color: "blue",
-                    });
-                  }}
-                  w={220}
-                />
-                <Button
-                  component={Link}
-                  href={`/${locale}/listings/${listing.id}/edit`}
-                  variant="light"
-                  mt={24}
-                >
-                  Upravit
-                </Button>
-                <Button color="red" variant="light" onClick={handleDelete} mt={24}>
-                  Smazat
-                </Button>
-              </>
-            )}
-          </Group>
         </Group>
 
-        <Card withBorder radius="lg" p={0}>
-          {listing.imageUrl && (
-            <Card.Section>
-              <Image
-                src={listing.imageUrl}
-                alt={listing.title}
-                height={300}
-                fit="cover"
-                fallbackSrc="https://placehold.co/800x300?text=Bez+fotky"
+        <Card withBorder radius="lg" p="xl">
+          <form onSubmit={form.onSubmit(handleSubmit)}>
+            <Stack gap="md">
+              <TextInput
+                label="Název"
+                placeholder="Např. Psací stůl"
+                {...form.getInputProps("title")}
               />
-            </Card.Section>
-          )}
-          <Stack gap="md" p="xl">
-            <Title order={1}>{listing.title}</Title>
-            <Group gap="xs">
-              <Badge variant="light">{listing.category}</Badge>
-              <Badge color={statusColors[listing.status]}>
-                {statusLabels[listing.status]}
-              </Badge>
-            </Group>
-            <Text fw={700} size="xl" c="orange">
-              {listing.isFree ? "Zdarma" : `${Number(listing.price).toLocaleString("cs-CZ")} Kč`}
-            </Text>
-            <Divider />
-            <Text>{listing.description}</Text>
-            <Text c="dimmed">Kontakt: {listing.contact}</Text>
-
-            {listing.location && (
+              <Textarea
+                label="Popis"
+                minRows={5}
+                placeholder="Popiš stav, velikost a další detaily"
+                {...form.getInputProps("description")}
+              />
+              <Checkbox
+                label="Zdarma"
+                checked={form.values.isFree}
+                onChange={(event) => {
+                  const checked = event.currentTarget.checked;
+                  form.setFieldValue("isFree", checked);
+                  if (checked) {
+                    form.setFieldValue("price", undefined);
+                    form.clearFieldError("price");
+                  }
+                }}
+              />
+              <NumberInput
+                label="Cena"
+                placeholder="např. 500"
+                disabled={form.values.isFree}
+                value={form.values.price}
+                onChange={(value) =>
+                  form.setFieldValue("price", typeof value === "number" ? value : undefined)
+                }
+                error={form.errors.price}
+              />
+              <Select
+                label="Kategorie"
+                data={categories}
+                placeholder="Vyber kategorii"
+                {...form.getInputProps("category")}
+              />
+              <TextInput
+                label="Kontakt"
+                placeholder="Např. jana@blogic.cz"
+                {...form.getInputProps("contact")}
+              />
+              <TextInput
+                label="Adresa (pro zobrazení na mapě)"
+                placeholder="Např. Praha, Česká republika"
+                description="Nepovinné — zadej město nebo ulici"
+                {...form.getInputProps("address")}
+              />
               <Stack gap="xs">
-                <Divider />
-                <Text fw={500}>Poloha</Text>
-                <Text c="dimmed" size="sm">{listing.location.address}</Text>
-                <ListingsMap listings={[listing]} />
+                <Text size="sm" fw={500}>Fotka</Text>
+                <ImageUpload onUploadComplete={(url) => setImageUrl(url)} />
+                {imageUrl && (
+                  <Image src={imageUrl} alt="Náhled fotky" radius="md" h={200} fit="cover" />
+                )}
               </Stack>
-            )}
 
-            <Divider />
-            <ListingChat listingId={listing.id} />
-          </Stack>
+              <Button type="submit">Uložit inzerát</Button>
+            </Stack>
+          </form>
         </Card>
       </Stack>
     </Container>

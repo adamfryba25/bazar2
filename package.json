@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",
-    "@clerk/nextjs": "^6.0.0",
+    "@clerk/nextjs": "^6.39.5",
     "@mantine/core": "^9.2.1",
     "@mantine/form": "^9.2.1",
     "@mantine/hooks": "^9.2.1",

@@ -12,11 +12,12 @@ export const categoryEnum = pgEnum("category", [
 export const statusEnum = pgEnum("status", [
   "available",
   "reserved",
-  "sold"
+  "sold",
 ]);
 
 export const listings = pgTable("listings", {
   id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id"),
   title: text("title").notNull(),
   description: text("description").notNull(),
   price: numeric("price"),
@@ -25,6 +26,7 @@ export const listings = pgTable("listings", {
   status: statusEnum("status").notNull().default("available"),
   contact: text("contact").notNull(),
   imageUrl: text("image_url"),
+  color: text("color").default("#ffffff"),           // ← NOVÉ
   createdAt: timestamp("created_at").notNull().defaultNow(),
   locationAddress: text("location_address"),
   locationLat: real("location_lat"),
@@ -42,5 +44,5 @@ export const messages = pgTable("messages", {
 
 export type dbListing = typeof listings.$inferSelect;
 export type NewListing = typeof listings.$inferInsert;
-export type dbMessages = typeof listings.$inferSelect;
-export type NewMessages = typeof listings.$inferInsert;
+export type dbMessages = typeof messages.$inferSelect;
+export type NewMessages = typeof messages.$inferInsert;
