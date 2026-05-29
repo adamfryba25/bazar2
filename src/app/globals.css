@@ -6,3 +6,10 @@
 @import "@mantine/core/styles.layer.css";
 
 @import "tailwindcss/utilities.css" layer(utilities);
+
+[data-mantine-color-scheme="dark"] .mantine-Input-input,
+[data-mantine-color-scheme="dark"] input.mantine-Input-input {
+  background-color: #3a3a3a !important;
+  border-color: #666666 !important;
+  color: #ffffff !important;
+}

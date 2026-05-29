@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
-  ActionIcon, Avatar, Box, Button, Card, Group, ScrollArea,
+  ActionIcon, Avatar, Badge, Box, Button, Card, Group, ScrollArea,
   Stack, Text, Textarea, Title
 } from "@mantine/core";
 
 import { IconTrash } from "@tabler/icons-react";
 import { useUser } from "@clerk/nextjs";
-import { SignInButton } from "@clerk/clerk-react";
+import { SignInButton } from "@clerk/nextjs";
 
 type Message = {
   id: string;
@@ -21,15 +21,17 @@ type Message = {
 
 interface Props {
   listingId: string;
-  hasColor?: boolean;  // ← NOVÉ
+  listingOwnerId?: string | null;
+  hasColor?: boolean;
 }
 
-export function ListingChat({ listingId, hasColor }: Props) {
+export function ListingChat({ listingId, listingOwnerId, hasColor }: Props) {
   const { isSignedIn, user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hasScrolled = useRef(false);
 
   const cardStyle = hasColor ? {
     backgroundColor: "#ffffff",
@@ -49,7 +51,13 @@ export function ListingChat({ listingId, hasColor }: Props) {
   }, [listingId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!hasScrolled.current) {
+      hasScrolled.current = true;
+      return;
+    }
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const handleSend = async () => {
@@ -80,7 +88,7 @@ export function ListingChat({ listingId, hasColor }: Props) {
     <Stack gap="sm">
       <Title order={4} style={{ color: hasColor ? "#333333" : undefined }}>Chat</Title>
       <Card withBorder radius="md" p={0} style={cardStyle}>
-        <ScrollArea h={300} p="md">
+        <ScrollArea h={300} p="md" viewportRef={scrollRef}>
           <Stack gap="sm">
             {messages.length === 0 && (
               <Text c="dimmed" ta="center" size="sm">Zatím žádné zprávy. Buď první!</Text>
@@ -92,10 +100,15 @@ export function ListingChat({ listingId, hasColor }: Props) {
                     {msg.userName[0]?.toUpperCase()}
                   </Avatar>
                   <Box>
-                    <Group gap="xs">
+                    <Group gap="xs" align="center">
                       <Text size="sm" fw={600} style={{ color: hasColor ? "#333333" : undefined }}>
                         {msg.userName}
                       </Text>
+                      {listingOwnerId && msg.userId === listingOwnerId && (
+                        <Badge size="xs" color="orange" variant="filled">
+                          Majitel
+                        </Badge>
+                      )}
                       <Text size="xs" c="dimmed">
                         {new Date(msg.createdAt).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
                       </Text>
@@ -117,7 +130,6 @@ export function ListingChat({ listingId, hasColor }: Props) {
                 )}
               </Group>
             ))}
-            <div ref={bottomRef} />
           </Stack>
         </ScrollArea>
 
@@ -148,9 +160,7 @@ export function ListingChat({ listingId, hasColor }: Props) {
           <Box p="md" style={{ borderTop: "1px solid var(--mantine-color-default-border)" }}>
             <Group justify="center">
               <Text c="dimmed" size="sm">Pro psaní zpráv se musíš přihlásit.</Text>
-              <SignInButton mode="modal">
-                <Button variant="subtle" size="sm">Přihlásit se</Button>
-              </SignInButton>
+              <SignInButton mode="modal" />
             </Group>
           </Box>
         )}

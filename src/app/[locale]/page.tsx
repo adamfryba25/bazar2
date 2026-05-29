@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { useClerk, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 import {
   Button, Card, Center, Container, Group, NumberInput, Select,
@@ -43,6 +43,7 @@ export default function Page() {
   const locale = Array.isArray(params.locale) ? params.locale[0] : params.locale ?? "cs";
 
   const { listings, ready } = useListings();
+  const { openSignIn, openSignUp } = useClerk();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -94,12 +95,12 @@ export default function Page() {
           </Text>
           <Group gap="sm">
             <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="subtle">Přihlásit se</Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button>Registrovat se</Button>
-              </SignUpButton>
+              <Button variant="subtle" onClick={() => openSignIn()}>
+                Přihlásit se
+              </Button>
+              <Button onClick={() => openSignUp()}>
+                Registrovat se
+              </Button>
             </SignedOut>
             <SignedIn>
               <Button component={Link} href={`/${locale}/listings/new`}>

@@ -24,7 +24,22 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
       <body>
         <ClerkProvider afterSignOutUrl="/cs">
           <NextIntlClientProvider>
-            <MantineProvider defaultColorScheme="auto">
+            <MantineProvider
+              defaultColorScheme="auto"
+              theme={{
+                components: {
+                  Input: {
+                    styles: {
+                      input: {
+                        backgroundColor: "light-dark(var(--mantine-color-white), #2e2e2e)",
+                        borderColor: "light-dark(var(--mantine-color-gray-4), #555555)",
+                        color: "light-dark(var(--mantine-color-black), #ffffff)",
+                      },
+                    },
+                  },
+                },
+              }}
+            >
               <Notifications position="top-right" />
               <ModalsProvider>
                 <Providers>
